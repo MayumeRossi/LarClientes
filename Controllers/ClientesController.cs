@@ -1,151 +1,90 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using LarClientes.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace LarClientes.Controllers
 {
-    public class ClientesController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ClienteController : ControllerBase
     {
-        private readonly LarClientesContext _context;
+        private readonly Clientes1Contexto _context;
 
-        public ClientesController(LarClientesContext context)
+        public ClienteController(Clientes1Contexto context)
         {
             _context = context;
         }
 
-        // GET: Clientes
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Cliente>>> GetClientes()
         {
-            return View(await _context.Clientes.ToListAsync());
+            return await _context.Clientes.ToListAsync();
         }
 
-        // GET: Clientes/Details/5
-        public async Task<IActionResult> Details(int? id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Cliente>> GetCliente(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cliente = await _context.Clientes
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (cliente == null)
-            {
-                return NotFound();
-            }
-
-            return View(cliente);
-        }
-
-        // GET: Clientes/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Clientes/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Nome,CpfCnpj,TipoClienteId,Categoria,DataCadastro")] Cliente cliente)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(cliente);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(cliente);
-        }
-
-        // GET: Clientes/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var cliente = await _context.Clientes.FindAsync(id);
+
             if (cliente == null)
             {
                 return NotFound();
             }
-            return View(cliente);
+
+            return cliente;
         }
 
-        // POST: Clientes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Nome,CpfCnpj,TipoClienteId,Categoria,DataCadastro")] Cliente cliente)
+        public async Task<ActionResult<Cliente>> PostCliente(Cliente cliente)
+        {
+            _context.Clientes.Add(cliente);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetCliente), new { id = cliente.ID }, cliente);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCliente(int id, Cliente cliente)
         {
             if (id != cliente.ID)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(cliente).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(cliente);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ClienteExists(cliente.ID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(cliente);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ClienteExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: Clientes/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCliente(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var cliente = await _context.Clientes
-                .FirstOrDefaultAsync(m => m.ID == id);
+            var cliente = await _context.Clientes.FindAsync(id);
             if (cliente == null)
             {
                 return NotFound();
             }
 
-            return View(cliente);
-        }
-
-        // POST: Clientes/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var cliente = await _context.Clientes.FindAsync(id);
-            if (cliente != null)
-            {
-                _context.Clientes.Remove(cliente);
-            }
-
+            _context.Clientes.Remove(cliente);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool ClienteExists(int id)

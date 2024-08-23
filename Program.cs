@@ -9,7 +9,8 @@ builder.Services.AddDbContext<LarClientesContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
     new MySqlServerVersion(new Version(8, 0, 21)))); // Ajuste a versão do MySQL conforme necessário
 
-// Adicionando serviços MVC
+// Adicionando serviços MVC e controladores
+builder.Services.AddControllers(); // Adiciona controladores, incluindo APIs
 builder.Services.AddControllersWithViews();
 
 // Adicionando o Swagger para documentação da API (opcional)
@@ -42,9 +43,8 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// Ajustando o roteamento para o controlador de Clientes
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Clientes}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
